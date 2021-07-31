@@ -14,4 +14,11 @@ export = (app: Probot) => {
     });
     await context.octokit.pulls.createReviewComment(issueComment);
   });
+
+  app.on('pull_request.reopened', async (context) => {
+    const issueComment = context.pullRequest({
+      body: 'This is test',
+    });
+    await context.octokit.pulls.createReviewComment(issueComment);
+  });
 };
