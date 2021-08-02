@@ -8,6 +8,20 @@ export = (app: Probot) => {
     await context.octokit.issues.createComment(issueComment);
   });
 
+  app.on('issues.closed', async (context) => {
+    const issueComment = context.issue({
+      body: 'This issue is closed!',
+    });
+    await context.octokit.issues.createComment(issueComment);
+  });
+
+  app.on('issues.reopened', async (context) => {
+    const issueComment = context.issue({
+      body: 'Thanks for re-opening this issue!',
+    });
+    await context.octokit.issues.createComment(issueComment);
+  });
+
   app.on('pull_request.opened', async (context) => {
     const issueComment = context.pullRequest({
       body: 'This is test',
