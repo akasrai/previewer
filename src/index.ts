@@ -1,31 +1,11 @@
 import { Probot } from 'probot';
 
 export = (app: Probot) => {
-  app.on('issues.opened', async (context) => {
-    const issueComment = context.issue({
-      body: 'Thanks for opening this issue!',
-    });
-
-    await context.octokit.issues.createComment(issueComment);
-  });
-
-  app.on('issues.closed', async (context) => {
-    const issueComment = context.issue({
-      body: 'This issue is closed!',
-    });
-
-    await context.octokit.issues.createComment(issueComment);
-  });
-
-  app.on('issues.reopened', async (context) => {
-    const issueComment = context.issue({
-      body: 'Thanks for re-opening this issue!',
-    });
-
-    await context.octokit.issues.createComment(issueComment);
-  });
-
   app.on('pull_request.opened', async (context) => {
+    if (context.isBot) {
+      return;
+    }
+
     const pullNumber = context.payload.pull_request.number;
     const repo = context.payload.pull_request.base.repo.name;
     const owner = context.payload.pull_request.base.repo.owner.login;
@@ -51,6 +31,10 @@ export = (app: Probot) => {
   });
 
   app.on('pull_request.reopened', async (context) => {
+    if (context.isBot) {
+      return;
+    }
+
     const title = context.payload.pull_request.title;
     const pullNumber = context.payload.pull_request.number;
     const auther = context.payload.pull_request.user.login;
@@ -70,18 +54,38 @@ export = (app: Probot) => {
       await context.octokit.pulls.createReview({
         repo,
         owner,
-        body: `@${auther} PR title format is in correct. Please reformat the title.`,
+        body: `Hey @${auther}, \n\n PR title format is incorrect. Please reformat the title as in example below.\n**CI-1555 Transfapay: Integrate OAuth bank widget**`,
         pull_number: pullNumber,
         event: 'REQUEST_CHANGES',
       });
     }
   });
 
-  app.on('pull_request.closed', async (context) => {
-    const prComment = context.issue({
-      body: 'This is test',
-    });
+  app.on('pull_request.edited', async (context) => {
+    if (context.isBot) {
+      return;
+    }
 
-    await context.octokit.issues.createComment(prComment);
+    const config = await context.config('previewer.yml', { comment: 'test' });
+
+    context.log.info('config: ', config?.comment);
+
+    const body = context.payload.pull_request.body;
+    const pullNumber = context.payload.pull_request.number;
+    const auther = context.payload.pull_request.user.login;
+    const repo = context.payload.pull_request.base.repo.name;
+    const owner = context.payload.pull_request.base.repo.owner.login;
+
+    const isTaskCompleted = body.match(/(- \[[ ]\].+)/g) === null;
+
+    if (!isTaskCompleted) {
+      await context.octokit.pulls.createReview({
+        repo,
+        owner,
+        pull_number: pullNumber,
+        event: 'REQUEST_CHANGES',
+        body: `Hey @${auther}, please review your PR and update the checklist`,
+      });
+    }
   });
 };
