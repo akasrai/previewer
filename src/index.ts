@@ -66,9 +66,13 @@ export = (app: Probot) => {
       return;
     }
 
-    const config = await context.config('previewer.yml', { comment: 'test' });
+    interface A {
+      reviewers: string;
+    }
 
-    context.log.info('config: ', config?.comment);
+    const config: A | null = await context.config('previewer.yml');
+
+    context.log.info(config?.reviewers || '');
 
     const body = context.payload.pull_request.body;
     const pullNumber = context.payload.pull_request.number;
