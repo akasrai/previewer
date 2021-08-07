@@ -1,95 +1,43 @@
 import { Probot } from 'probot';
+import { requestPRReview, reviewPR } from './services';
 
 export = (app: Probot) => {
-  app.on('pull_request.opened', async (context) => {
+  app.on('pull_request.opened', (context) => {
     if (context.isBot) {
       return;
     }
 
-    const pullNumber = context.payload.pull_request.number;
-    const repo = context.payload.pull_request.base.repo.name;
-    const owner = context.payload.pull_request.base.repo.owner.login;
+    requestPRReview(context);
+    reviewPR(context);
+  });
 
-    await context.octokit.pulls.requestReviewers({
-      owner,
-      repo,
-      pull_number: pullNumber,
-      reviewers: ['perisrai'],
-    });
+  app.on('pull_request.reopened', (context) => {
+    if (context.isBot) {
+      return;
+    }
 
-    const title = context.payload.pull_request.title;
+    requestPRReview(context);
+    reviewPR(context);
+  });
 
-    if (!/[A-Z]+-[0-9]+ [a-zA-Z]+:\s+([a-zA-Z]+( [a-zA-Z]+)+)/.test(title)) {
-      await context.octokit.pulls.createReview({
-        repo,
-        owner,
-        body: 'PR title format is not correct',
-        pull_number: pullNumber,
-        event: 'REQUEST_CHANGES',
-      });
+  app.on('pull_request.edited', (context) => {
+    if (context.isBot) {
+      return;
     }
   });
 
-  app.on('pull_request.reopened', async (context) => {
+  app.on('pull_request_review.submitted', (context) => {
     if (context.isBot) {
       return;
-    }
-
-    const title = context.payload.pull_request.title;
-    const pullNumber = context.payload.pull_request.number;
-    const auther = context.payload.pull_request.user.login;
-    const repo = context.payload.pull_request.base.repo.name;
-    const owner = context.payload.pull_request.base.repo.owner.login;
-
-    const reviewers = ['akasrai', 'perisrai'];
-
-    await context.octokit.pulls.requestReviewers({
-      owner,
-      repo,
-      pull_number: pullNumber,
-      reviewers: reviewers.filter((r) => r !== auther),
-    });
-
-    if (!/[A-Z]+-[0-9]+ [a-zA-Z]+:\s+([a-zA-Z]+( [a-zA-Z]+)+)/.test(title)) {
-      await context.octokit.pulls.createReview({
-        repo,
-        owner,
-        body: `Hey @${auther}, \n\n PR title format is incorrect. Please reformat the title as in example below.\n**CI-1555 Transfapay: Integrate OAuth bank widget**`,
-        pull_number: pullNumber,
-        event: 'REQUEST_CHANGES',
-      });
     }
   });
 
-  app.on('pull_request.edited', async (context) => {
+  app.on('pull_request.review_requested', (context) => {
     if (context.isBot) {
       return;
     }
 
-    interface A {
-      reviewers: string;
-    }
-
-    const config: A | null = await context.config('previewer.yml');
-
-    context.log.info(config?.reviewers || '');
-
-    const body = context.payload.pull_request.body;
-    const pullNumber = context.payload.pull_request.number;
-    const auther = context.payload.pull_request.user.login;
-    const repo = context.payload.pull_request.base.repo.name;
-    const owner = context.payload.pull_request.base.repo.owner.login;
-
-    const isTaskCompleted = body.match(/(- \[[ ]\].+)/g) === null;
-
-    if (!isTaskCompleted) {
-      await context.octokit.pulls.createReview({
-        repo,
-        owner,
-        pull_number: pullNumber,
-        event: 'REQUEST_CHANGES',
-        body: `Hey @${auther}, please review your PR and update the checklist`,
-      });
-    }
+    context.log.info('fuck', context.payload.pull_request.requested_reviewers);
+    reviewPR(context);
   });
 };

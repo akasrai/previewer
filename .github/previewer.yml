@@ -1,3 +1,20 @@
 title: Hacker News
 
-reviewer: akasrai
+# List of PR reviewers
+reviewers: [akasrai]
+
+# Checklist validation
+checklists:
+  [
+    'Tested on local machine',
+    'My code follows the style guidelines of this project',
+    'I have performed a self-review of my own code',
+    'My changes generate no new warnings',
+    'Bug fix|New feature|Improvement|Breaking change',
+    'Backend|Frontend',
+  ]
+
+# Labels to add in following events
+labels:
+  approved: Approved
+  request-change: Changes Requested
