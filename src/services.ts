@@ -31,7 +31,7 @@ export const reviewPR = async (context: Context) => {
     event: isValid ? 'APPROVE' : 'REQUEST_CHANGES',
     body: isValid
       ? `Hey @${auther},\n\nIt looks like you're all set!`
-      : `Hey @${auther},\n\n## There's few items you need to take care of before we can merge this PR:\n ${comment}\n\n\n**Please re-request a review from me once you fix these issues and I'll come back and take a look!**`,
+      : `Hey @${auther},\n\n## There's few items you need to take care of before we can merge this PR:\n ${comment}\n\n\n**Please fix these issues, I'll come back and take a look!**`,
   });
 
   context.octokit.checks.create({
@@ -51,10 +51,27 @@ export const reviewPR = async (context: Context) => {
     },
   });
 
-  context.octokit.issues.addLabels({
-    repo,
-    owner,
-    issue_number: pullNumber,
-    labels: ['Approved Test'],
-  });
+  if (!isValid) {
+    context.octokit.issues.addLabels({
+      repo,
+      owner,
+      issue_number: pullNumber,
+      labels: ['Changes Requested'],
+    });
+  }
+};
+
+const contexts = new Map();
+
+export const reviewPROnEdit = (context: Context) => {
+  if (!contexts.has(context.payload.pull_request.id)) {
+    contexts.set(context.payload.pull_request.id, context);
+
+    setTimeout(async () => {
+      await reviewPR(contexts.get(context.payload.pull_request.id));
+      contexts.delete(context.payload.pull_request.id);
+    }, 60000);
+  }
+
+  contexts.set(context.payload.pull_request.id, context);
 };

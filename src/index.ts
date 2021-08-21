@@ -1,5 +1,5 @@
 import { Probot } from 'probot';
-import { requestPRReview, reviewPR } from './services';
+import { requestPRReview, reviewPR, reviewPROnEdit } from './services';
 
 export = (app: Probot) => {
   app.on('pull_request.opened', (context) => {
@@ -24,6 +24,8 @@ export = (app: Probot) => {
     if (context.isBot) {
       return;
     }
+
+    reviewPROnEdit(context);
   });
 
   app.on('pull_request_review.submitted', (context) => {
