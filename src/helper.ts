@@ -8,6 +8,13 @@ interface Checklists {
   checklists: Array<string>;
 }
 
+interface PrTitle {
+  prtitle: {
+    regex: string;
+    example: string;
+  };
+}
+
 export const isEmpty = (value: any) => {
   return (
     value === '' ||
@@ -37,12 +44,25 @@ const getChecklists = async (context: Context) => {
   return config?.checklists || [];
 };
 
-export const validatePR = async (context: Context) => {
-  const title = context.payload.pull_request.title;
+const getPRRegex = async (context: Context) => {
+  const config: PrTitle | null = await context.config('previewer.yml');
 
+  return {
+    regex: config?.prtitle.regex,
+    example: config?.prtitle.example,
+  };
+};
+
+export const getLabels = (context: Context): string[] => {
+  const labels = context.payload.pull_request.labels;
+
+  return labels.map((label: any) => label.name);
+};
+
+export const validatePR = async (context: Context) => {
   let comment = '';
 
-  const titleReview = reviewPRTitle(title);
+  const titleReview = await reviewPRTitle(context);
 
   if (!titleReview.isValid) {
     comment = titleReview.comment;
@@ -57,9 +77,13 @@ export const validatePR = async (context: Context) => {
   return review(comment);
 };
 
-const reviewPRTitle = (title: string) => {
-  if (!/[A-Z]+-[0-9]+ [a-zA-Z]+:\s+([a-zA-Z]+( [a-zA-Z]+)+)/.test(title)) {
-    const comment = `- *PR title format is incorrect. Please reformat the title as in example below.*\n**CI-1555 Transfapay: Integrate OAuth bank widget**\n`;
+const reviewPRTitle = async (context: Context) => {
+  const { regex, example } = await getPRRegex(context);
+  const validation = new RegExp(regex || '');
+  const title = context.payload.pull_request.title;
+
+  if (!validation.test(title)) {
+    const comment = `- *PR title format is incorrect. Please reformat the title as in example below.*\n**${example}**\n`;
 
     return review(comment);
   }

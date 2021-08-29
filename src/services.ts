@@ -1,5 +1,10 @@
 import { Context } from 'probot';
-import { getReviewers, validatePR } from './helper';
+import { getLabels, getReviewers, validatePR } from './helper';
+
+const Labels = {
+  Approved: 'Approved',
+  ChangesRequested: 'Changes Requested',
+};
 
 export const requestPRReview = async (context: Context) => {
   const reviewers = await getReviewers(context);
@@ -22,17 +27,37 @@ export const reviewPR = async (context: Context) => {
   const repo = context.payload.pull_request.base.repo.name;
   const owner = context.payload.pull_request.base.repo.owner.login;
 
+  const labels = getLabels(context);
   const { isValid, comment } = await validatePR(context);
 
-  context.octokit.pulls.createReview({
-    repo,
-    owner,
-    pull_number: pullNumber,
-    event: isValid ? 'APPROVE' : 'REQUEST_CHANGES',
-    body: isValid
-      ? `Hey @${auther},\n\nIt looks like you're all set!`
-      : `Hey @${auther},\n\n## There's few items you need to take care of before we can merge this PR:\n ${comment}\n\n\n**Please fix these issues, I'll come back and take a look!**`,
-  });
+  if (!isValid) {
+    context.octokit.pulls.createReview({
+      repo,
+      owner,
+      pull_number: pullNumber,
+      event: 'REQUEST_CHANGES',
+      body: `Hey @${auther},\n\n## There's few items you need to take care of before we can merge this PR:\n ${comment}\n\n\n**Please fix these issues, I'll come back and take a look!**`,
+    });
+
+    if (new Set(labels).has(Labels.Approved)) {
+      context.octokit.issues.removeLabel({
+        repo,
+        owner,
+        issue_number: pullNumber,
+        name: Labels.Approved,
+      });
+    }
+  }
+
+  if (!new Set(labels).has(Labels.Approved) && isValid) {
+    context.octokit.pulls.createReview({
+      repo,
+      owner,
+      pull_number: pullNumber,
+      event: 'APPROVE',
+      body: `Hey @${auther},\n\nIt looks like you're all set!`,
+    });
+  }
 
   context.octokit.checks.create({
     repo,
@@ -51,14 +76,12 @@ export const reviewPR = async (context: Context) => {
     },
   });
 
-  if (!isValid) {
-    context.octokit.issues.addLabels({
-      repo,
-      owner,
-      issue_number: pullNumber,
-      labels: ['Changes Requested'],
-    });
-  }
+  context.octokit.issues.addLabels({
+    repo,
+    owner,
+    issue_number: pullNumber,
+    labels: isValid ? [Labels.Approved] : [Labels.ChangesRequested],
+  });
 };
 
 const contexts = new Map();

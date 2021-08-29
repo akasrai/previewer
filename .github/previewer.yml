@@ -3,6 +3,11 @@ title: Hacker News
 # List of PR reviewers
 reviewers: [akasrai]
 
+# PR title regex
+prtitle:
+  regex: '[A-Z]+-[0-9]+ [a-zA-Z]+:\s+([a-zA-Z]+( [a-zA-Z]+)+)'
+  example: 'CI-9999 Affiliate: Integrate OAuth bank widget'
+
 # Checklist validation
 checklists:
   [
