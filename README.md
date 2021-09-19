@@ -1,6 +1,12 @@
-# reviewer
+# previewer
 
-> A GitHub App built with [Probot](https://github.com/probot/probot) that A PR Reviewer
+PReviewer is a Github app build with [Probot](https://github.com/probot/probot) to automate the PR review.
+
+## Features
+
+1. Auto request PR review to contributors
+2. Review PR title formatting
+3. Review PR checklist
 
 ## Setup
 
@@ -8,25 +14,12 @@
 # Install dependencies
 npm install
 
+# Build the project
+npm run build
+
 # Run the bot
 npm start
 ```
-
-## Docker
-
-```sh
-# 1. Build container
-docker build -t reviewer .
-
-# 2. Start container
-docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> reviewer
-```
-
-## Contributing
-
-If you have suggestions for how reviewer could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
-
-For more, check out the [Contributing Guide](CONTRIBUTING.md).
 
 ## License
 
