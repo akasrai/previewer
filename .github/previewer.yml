@@ -1,25 +1,20 @@
-title: Hacker News
+title: PReviewer
 
 # List of PR reviewers
 reviewers: [akasrai]
 
 # PR title regex
 prtitle:
-  regex: '[A-Z]+-[0-9]+ [a-zA-Z]+:\s+([a-zA-Z]+( [a-zA-Z]+)+)'
-  example: 'CI-9999 Affiliate: Integrate OAuth bank widget'
+  regex: '[a-zA-Z]'
+  example: 'This is the PR title example'
 
 # Checklist validation
-checklists:
-  [
+checklists: [
     'Tested on local machine',
     'My code follows the style guidelines of this project',
     'I have performed a self-review of my own code',
     'My changes generate no new warnings',
-    'Bug fix|New feature|Improvement|Breaking change',
-    'Backend|Frontend',
+    # The first string before | is title and others are options when checklists are grouped and min of one checklist is to be checked
+    'Type of Change|Bug fix|New feature|Improvement|Breaking change',
+    'Platform|Backend|Frontend',
   ]
-
-# Labels to add in following events
-labels:
-  approved: Approved
-  request-change: Changes Requested

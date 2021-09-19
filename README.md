@@ -6,7 +6,8 @@ PReviewer is a Github app build with [Probot](https://github.com/probot/probot) 
 
 - [x] Auto request PR review to contributors
 - [x] Review PR title formatting
-- [x] Review PR checklist
+- [x] Review and comments if PR checklist are not completed
+- [x] Blocks merging if PR checklist are not completed
 
 ## Installation
 
