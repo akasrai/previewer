@@ -27,19 +27,4 @@ export = (app: Probot) => {
 
     reviewPROnEdit(context);
   });
-
-  app.on('pull_request_review.submitted', (context) => {
-    if (context.isBot) {
-      return;
-    }
-  });
-
-  app.on('pull_request.review_requested', (context) => {
-    if (context.isBot) {
-      return;
-    }
-
-    context.log.info('fuck', context.payload.pull_request.requested_reviewers);
-    reviewPR(context);
-  });
 };
